@@ -3,20 +3,16 @@ package com.bsilva.starwars.controller;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
 import com.bsilva.starwars.entity.Planet;
 import com.bsilva.starwars.service.PlanetService;
-@RestController
+@Controller
 @RequestMapping("/planets")
 public class StarWarsPlanetController {
 	@Autowired 
@@ -28,62 +24,36 @@ public class StarWarsPlanetController {
 		return new ResponseEntity<>(planetas,HttpStatus.OK);
 	}
 	//Get a planet by Name
-	@GetMapping("/search/{nome}")
-	ResponseEntity<?>getPlanetsByName(@PathVariable String nome ){
-		Planet planeta = service.getPlanetByName(nome);
-		if(planeta == null)
-		{
-			HashMap<String, String> error = new HashMap<>();
-			error.put("nome", nome);
-			error.put("error_code", "001");
-			error.put("description", "PLANET NOT FOUND");
-			return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
+	@GetMapping("/search/")
+	ResponseEntity<?>getPlanetsByName(@RequestParam String name ) throws NotFoundException {
+		Planet planet = service.getPlanetByName(name);
+
+		if(planet == null){
+			throw new NotFoundException("PLANET NOT FOUND");
 		}
-		return new ResponseEntity<>(planeta,HttpStatus.OK);
+
+		return new ResponseEntity<>(planet,HttpStatus.OK);
 	}
 	
 	//Get a planet by id
 	@GetMapping("/{id}")
-	ResponseEntity<?>getPlanetById(@PathVariable String id){
+	ResponseEntity<?>getPlanetById(@PathVariable String id) throws NotFoundException {
 		Planet planeta = service.getPlanetById(Long.parseLong(id));
-		if(planeta == null)
-		{
-			HashMap<String, String> error = new HashMap<>();
-			error.put("id", id);
-			error.put("error_code", "001");
-			error.put("description", "PLANET NOT FOUND");
-			return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
-		}
+
 		return new ResponseEntity<>(planeta,HttpStatus.OK);
 	}
 	
 	//Add a planet
 	@PostMapping
-	ResponseEntity<?>savePlanet(@RequestBody Planet planeta){
-		try {
-			service.save(planeta.getNome(), planeta.getClima(), planeta.getTerreno());
-		} catch (Exception e) {
-			HashMap<String, String> error = new HashMap<>();
-			error.put("nome", planeta.getNome());
-			error.put("error_code", "002");
-			error.put("description", e.getMessage());
-			return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
-		}
+	ResponseEntity<?>savePlanet(@RequestBody Planet planeta) throws Exception {
+		service.save(planeta.getNome(), planeta.getClima(), planeta.getTerreno());
 		return new ResponseEntity<>(service.serviceGetPlanet(),HttpStatus.CREATED);
 	}
 	
 	//Remove a planet
 	@DeleteMapping("/{id}")
-	ResponseEntity<?>removePlanet(@PathVariable String id){
+	ResponseEntity<?>removePlanet(@PathVariable String id) throws NotFoundException {
 		Planet planeta = service.getPlanetById(Long.parseLong(id));
-		if(planeta == null)
-		{
-			HashMap<String, String> error = new HashMap<>();
-			error.put("id", (id));
-			error.put("error_code", "001");
-			error.put("description", "PLANET NOT FOUND");
-			return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
-		}
 		service.removePlanet(Long.parseLong(id));
 		return new ResponseEntity<>(planeta, HttpStatus.OK);
 	}

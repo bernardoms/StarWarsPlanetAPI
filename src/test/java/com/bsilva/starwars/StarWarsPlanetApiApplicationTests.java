@@ -71,7 +71,7 @@ public class StarWarsPlanetApiApplicationTests {
 	//Test to get planet by name
 	@Test
 	public void shouldGetPlanetByName() throws Exception {
-		this.mockMvc.perform(get("/planets/search/Naboo")).andExpect(status().isOk())
+		this.mockMvc.perform(get("/planets/search/").param("name","Naboo")).andExpect(status().isOk())
 		.andExpect(jsonPath("$.nome").value("Naboo"))
 		.andExpect(jsonPath("$.clima").value("temperate"))
 		.andExpect(jsonPath("$.terreno").value("swamp, jungles"))
@@ -115,10 +115,9 @@ public class StarWarsPlanetApiApplicationTests {
 		this.mockMvc.perform(post("/planets").contentType(MediaType.APPLICATION_JSON).content(TestUtil.asJsonString(planet)));
 		//Add the same planet
 		
-		this.mockMvc.perform(post("/planets").contentType(MediaType.APPLICATION_JSON).content(TestUtil.asJsonString(planet))).andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.nome").value("Geonosis"))
-		.andExpect(jsonPath("$.error_code").value("002"))
-		.andExpect(jsonPath("$.description").value("O PLANETA JÁ EXISTE"));
+		this.mockMvc.perform(post("/planets").contentType(MediaType.APPLICATION_JSON).content(TestUtil.asJsonString(planet))).andExpect(status().isUnprocessableEntity())
+		.andExpect(jsonPath("$.error_code").value("001"))
+		.andExpect(jsonPath("$.description").value("PLANET ALREADY EXISTS"));
 	}
 	@Test
 	//Test add a non existent planet
@@ -129,34 +128,30 @@ public class StarWarsPlanetApiApplicationTests {
 		planet.setClima("temperate, arid");
 		planet.setTerreno("rock, desert, mountain, barren");
 
-		this.mockMvc.perform(post("/planets").contentType(MediaType.APPLICATION_JSON).content(TestUtil.asJsonString(planet))).andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.nome").value("Geonosisss"))
+		this.mockMvc.perform(post("/planets").contentType(MediaType.APPLICATION_JSON).content(TestUtil.asJsonString(planet))).andExpect(status().isNotFound())
 		.andExpect(jsonPath("$.error_code").value("002"))
-		.andExpect(jsonPath("$.description").value("O PLANETA NÃO EXISTE NO MUNDO STAR WARS"));
+		.andExpect(jsonPath("$.description").value("PLANET DOESN'T EXISTS in STAR WARS"));
 	}
 	@Test
 	//Test get a non existent planet name
 	public void shouldgiveGetNameError() throws Exception {
-		this.mockMvc.perform(get("/planets/search/Naboooooo")).andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.nome").value("Naboooooo"))
-		.andExpect(jsonPath("$.error_code").value("001"))
+		this.mockMvc.perform(get("/planets/search/").param("name", "Naboooooo")).andExpect(status().isNotFound())
+		.andExpect(jsonPath("$.error_code").value("002"))
 		.andExpect(jsonPath("$.description").value("PLANET NOT FOUND"));
 	}
 	@Test
 	//Test get a non existent planet id
 	public void shouldgiveGetIdError() throws Exception {
-		this.mockMvc.perform(get("/planets/9999")).andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.id").value("9999"))
-		.andExpect(jsonPath("$.error_code").value("001"))
+		this.mockMvc.perform(get("/planets/9999")).andExpect(status().isNotFound())
+		.andExpect(jsonPath("$.error_code").value("002"))
 		.andExpect(jsonPath("$.description").value("PLANET NOT FOUND"));
 	}
 	@Test
 	
 	//Test get a non existent planet id
 	public void shouldgiveRemoveIdError() throws Exception {
-		this.mockMvc.perform(delete("/planets/9999")).andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.id").value("9999"))
-		.andExpect(jsonPath("$.error_code").value("001"))
+		this.mockMvc.perform(delete("/planets/9999")).andExpect(status().isNotFound())
+		.andExpect(jsonPath("$.error_code").value("002"))
 		.andExpect(jsonPath("$.description").value("PLANET NOT FOUND"));
 	}
 	
